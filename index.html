@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>EcoSnap – Scan Sampah, Selamatkan Lingkungan</title>
+  <meta name="description" content="EcoSnap – Aplikasi edukasi lingkungan untuk mengenali dan mendaur ulang sampah dengan teknologi scan gambar." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <!-- THEME TOGGLE -->
+  <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()">🌙</button>
+
+  <!-- ===================== SPLASH SCREEN ===================== -->
+  <div id="page-splash" class="page active">
+    <div class="splash-bg">
+      <div class="splash-shape shape-1"></div>
+      <div class="splash-shape shape-2"></div>
+      <div class="splash-shape shape-3"></div>
+    </div>
+    <div class="splash-content">
+      <div class="splash-logo">
+        <div class="logo-icon">
+          <span class="logo-leaf">🌿</span>
+        </div>
+        <h1 class="logo-text">EcoSnap</h1>
+      </div>
+      <p class="splash-tagline">"Scan Sampah,<br/>Selamatkan Lingkungan"</p>
+      <div class="splash-loader">
+        <div class="loader-bar"><div class="loader-fill"></div></div>
+      </div>
+    </div>
+    <div class="splash-footer">Made with 💚 for Earth</div>
+  </div>
+
+  <!-- ===================== LOGIN SCREEN ===================== -->
+  <div id="page-login" class="page">
+    <div class="mobile-wrapper auth-wrapper">
+      <div class="auth-header">
+        <div class="auth-logo-small">🌿</div>
+        <h2>Selamat Datang!</h2>
+        <p>Masuk untuk lanjut menyelamatkan bumi.</p>
+      </div>
+      <form id="form-login" onsubmit="handleLogin(event)">
+        <div class="input-group">
+          <label>Email</label>
+          <input type="email" id="login-email" placeholder="contoh@email.com" required>
+        </div>
+        <div class="input-group">
+          <label>Password</label>
+          <input type="password" id="login-password" placeholder="••••••••" required>
+        </div>
+        <div class="auth-forgot">
+          <button type="button" onclick="navigateTo('forgot')">Lupa Password?</button>
+        </div>
+        <button type="submit" class="btn-scan auth-btn">Masuk Sekarang</button>
+      </form>
+      <div class="auth-footer">
+        Belum punya akun? <button type="button" class="text-btn" onclick="navigateTo('register')">Daftar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== REGISTER SCREEN ===================== -->
+  <div id="page-register" class="page">
+    <div class="mobile-wrapper auth-wrapper">
+      <div class="page-header auth-top">
+        <button class="back-btn" onclick="navigateTo('login')">←</button>
+      </div>
+      <div class="auth-header">
+        <h2>Daftar EcoSnap</h2>
+        <p>Mulai perjalanan ramah lingkunganmu.</p>
+      </div>
+      <form id="form-register" onsubmit="handleRegister(event)">
+        <div class="input-group">
+          <label>Nama Lengkap</label>
+          <input type="text" id="reg-name" placeholder="Sobat Bumi" required>
+        </div>
+        <div class="input-group">
+          <label>Email</label>
+          <input type="email" id="reg-email" placeholder="contoh@email.com" required>
+        </div>
+        <div class="input-group">
+          <label>Password</label>
+          <input type="password" id="reg-password" placeholder="Minimal 6 karakter" required minlength="6">
+        </div>
+        <button type="submit" class="btn-scan auth-btn">Daftar Sekarang</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================== FORGOT PASSWORD ===================== -->
+  <div id="page-forgot" class="page">
+    <div class="mobile-wrapper auth-wrapper">
+      <div class="page-header auth-top">
+        <button class="back-btn" onclick="navigateTo('login')">←</button>
+      </div>
+      <div class="auth-header">
+        <h2>Lupa Password?</h2>
+        <p>Masukkan emailmu untuk reset password.</p>
+      </div>
+      <form id="form-forgot" onsubmit="handleForgot(event)">
+        <div class="input-group">
+          <label>Email</label>
+          <input type="email" id="forgot-email" placeholder="contoh@email.com" required>
+        </div>
+        <button type="submit" class="btn-scan auth-btn">Kirim Link Reset</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================== HOME SCREEN ===================== -->
+  <div id="page-home" class="page">
+    <div class="mobile-wrapper">
+      <!-- Header -->
+      <div class="home-header">
+        <div class="home-greeting">
+          <p class="greeting-sub">Halo, Eco Warrior! 👋</p>
+          <h2 class="greeting-name" id="user-display-name">Pengguna</h2>
+        </div>
+        <div class="home-avatar" id="home-avatar-btn" onclick="navigateTo('profile')">
+          <span>🧑</span>
+        </div>
+      </div>
+
+      <!-- Eco Points Card -->
+      <div class="eco-points-card">
+        <div class="points-left">
+          <p class="points-label">Total Eco Points</p>
+          <h3 class="points-value" id="home-eco-points">0</h3>
+          <span class="points-badge">🏆 Eco Warrior</span>
+        </div>
+        <div class="points-right">
+          <div class="points-icon">⭐</div>
+          <p class="points-sub">Kumpulkan lebih banyak<br/>poin hari ini!</p>
+        </div>
+        <!-- Decorative shapes -->
+        <div class="card-shape cs1"></div>
+        <div class="card-shape cs2"></div>
+      </div>
+
+      <!-- Menu Cards -->
+      <div class="section-title">Menu Utama</div>
+      <div class="menu-grid">
+        <button class="menu-card menu-scan" onclick="navigateTo('scan')">
+          <div class="menu-icon">📸</div>
+          <div class="menu-label">Scan Sampah</div>
+          <div class="menu-arrow">→</div>
+        </button>
+        <button class="menu-card menu-edu" onclick="navigateTo('edukasi')">
+          <div class="menu-icon">📚</div>
+          <div class="menu-label">Edukasi</div>
+          <div class="menu-arrow">→</div>
+        </button>
+        <button class="menu-card menu-history" onclick="navigateTo('riwayat')">
+          <div class="menu-icon">📋</div>
+          <div class="menu-label">Riwayat</div>
+          <div class="menu-arrow">→</div>
+        </button>
+        <button class="menu-card menu-achieve" onclick="navigateTo('achievement')">
+          <div class="menu-icon">🏆</div>
+          <div class="menu-label">Achievement</div>
+          <div class="menu-arrow">→</div>
+        </button>
+      </div>
+
+      <!-- Daily Eco Fact -->
+      <div class="section-title">Eco Fact Hari Ini 🌍</div>
+      <div class="eco-fact-card">
+        <div class="fact-header">
+          <span class="fact-tag">Did You Know?</span>
+        </div>
+        <p class="fact-text" id="daily-fact">Memuat fakta lingkungan...</p>
+        <div class="fact-deco">🌱</div>
+      </div>
+
+      <!-- Floating decorative shapes -->
+      <div class="float-shape fs1">✦</div>
+      <div class="float-shape fs2">◆</div>
+      <div class="float-shape fs3">●</div>
+
+      <div style="height:80px;"></div>
+    </div>
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav">
+      <button class="nav-btn active" onclick="navigateTo('home')">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">Home</span>
+      </button>
+      <button class="nav-btn nav-scan-btn" onclick="navigateTo('scan')">
+        <span class="nav-icon">📸</span>
+        <span class="nav-label">Scan</span>
+      </button>
+      <button class="nav-btn" onclick="navigateTo('riwayat')">
+        <span class="nav-icon">📋</span>
+        <span class="nav-label">Riwayat</span>
+      </button>
+      <button class="nav-btn" onclick="navigateTo('achievement')">
+        <span class="nav-icon">🏆</span>
+        <span class="nav-label">Hadiah</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ===================== SCAN PAGE ===================== -->
+  <div id="page-scan" class="page">
+    <div class="mobile-wrapper">
+      <div class="page-header">
+        <button class="back-btn" onclick="navigateTo('home')">←</button>
+        <h2 class="page-title">Scan Sampah 📸</h2>
+        <div style="width:40px;"></div>
+      </div>
+
+      <!-- Upload Area -->
+      <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()">
+        <div id="upload-placeholder">
+          <div class="upload-icon">📷</div>
+          <p class="upload-text">Tap untuk upload foto sampah</p>
+          <p class="upload-sub">JPG, PNG, atau foto langsung</p>
+        </div>
+        <img id="image-preview" class="image-preview hidden" alt="Preview sampah" />
+        <input type="file" id="file-input" accept="image/*" capture="environment" class="hidden" onchange="handleImageUpload(event)" />
+      </div>
+
+      <!-- Kategori Manual -->
+      <div class="section-title">Atau Pilih Kategori Manual</div>
+      <div class="category-chips" id="category-chips">
+        <button class="chip" data-cat="Plastik" onclick="selectCategory(this)">♻️ Plastik</button>
+        <button class="chip" data-cat="Kardus" onclick="selectCategory(this)">📦 Kardus</button>
+        <button class="chip" data-cat="Organik" onclick="selectCategory(this)">🥬 Organik</button>
+        <button class="chip" data-cat="Kaleng" onclick="selectCategory(this)">🥫 Kaleng</button>
+        <button class="chip" data-cat="Kertas" onclick="selectCategory(this)">📄 Kertas</button>
+      </div>
+
+      <!-- Scan Button -->
+      <button class="btn-scan" id="btn-scan" onclick="startScan()">
+        <span class="btn-icon">🔍</span>
+        Scan Sekarang!
+      </button>
+
+      <!-- Loading Overlay -->
+      <div class="scan-loading hidden" id="scan-loading">
+        <div class="loading-inner">
+          <div class="loading-spinner">
+            <div class="spinner-ring"></div>
+            <span class="spinner-emoji">🌿</span>
+          </div>
+          <p class="loading-text">Scanning Waste...</p>
+          <p class="loading-sub">Menganalisis sampah kamu...</p>
+        </div>
+      </div>
+
+      <div style="height:80px;"></div>
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-btn" onclick="navigateTo('home')">
+        <span class="nav-icon">🏠</span><span class="nav-label">Home</span>
+      </button>
+      <button class="nav-btn active nav-scan-btn" onclick="navigateTo('scan')">
+        <span class="nav-icon">📸</span><span class="nav-label">Scan</span>
+      </button>
+      <button class="nav-btn" onclick="navigateTo('riwayat')">
+        <span class="nav-icon">📋</span><span class="nav-label">Riwayat</span>
+      </button>
+      <button class="nav-btn" onclick="navigateTo('achievement')">
+        <span class="nav-icon">🏆</span><span class="nav-label">Hadiah</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ===================== RESULT PAGE ===================== -->
+  <div id="page-result" class="page">
+    <div class="mobile-wrapper">
+      <div class="page-header">
+        <button class="back-btn" onclick="navigateTo('scan')">←</button>
+        <h2 class="page-title">Hasil Scan ✨</h2>
+        <div style="width:40px;"></div>
+      </div>
+
+      <!-- Success Badge -->
+      <div class="result-badge" id="result-badge">
+        <div class="badge-circle">✅</div>
+        <p class="badge-text">Sampah Teridentifikasi!</p>
+      </div>
+
+      <!-- Result Image -->
+      <div class="result-image-container">
+        <img id="result-image" class="result-image" alt="Gambar sampah" src="" />
+        <div class="result-image-overlay" id="result-cat-overlay">Plastik</div>
+      </div>
+
+      <!-- Result Details Card -->
+      <div class="result-card">
+        <div class="result-row">
+          <span class="result-label">🗂️ Nama Sampah</span>
+          <span class="result-val" id="res-name">—</span>
+        </div>
+        <div class="result-divider"></div>
+        <div class="result-row">
+          <span class="result-label">♻️ Kategori</span>
+          <span class="result-val result-cat-badge" id="res-category">—</span>
+        </div>
+        <div class="result-divider"></div>
+        <div class="result-row result-col">
+          <span class="result-label">🔄 Cara Daur Ulang</span>
+          <p class="result-desc" id="res-recycle">—</p>
+        </div>
+        <div class="result-divider"></div>
+        <div class="result-row result-col">
+          <span class="result-label">🌍 Fakta Lingkungan</span>
+          <p class="result-desc" id="res-fact">—</p>
+        </div>
+      </div>
+
+      <!-- Eco Points Earned -->
+      <div class="points-earned-card">
+        <span class="points-earned-icon">⭐</span>
+        <div>
+          <p class="points-earned-label">Eco Points Didapat</p>
+          <h3 class="points-earned-val" id="res-points">+0</h3>
+        </div>
+        <div class="points-earned-star">🎉</div>
+      </div>
+
+      <!-- Scan Again Button -->
+      <button class="btn-scan-again" onclick="navigateTo('scan')">
+        📸 Scan Lagi
+      </button>
+
+      <div style="height:80px;"></div>
+    </div>
+  </div>
+
+  <!-- ===================== RIWAYAT PAGE ===================== -->
+  <div id="page-riwayat" class="page">
+    <div class="mobile-wrapper">
+      <div class="page-header">
+        <button class="back-btn" onclick="navigateTo('home')">←</button>
+        <h2 class="page-title">Riwayat Scan 📋</h2>
+        <div style="width:40px;"></div>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="riwayat-stats">
+        <div class="stat-box">
+          <span class="stat-num" id="total-scans">0</span>
+          <span class="stat-desc">Total Scan</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-num" id="total-points-riwayat">0</span>
+          <span class="stat-desc">Total Points</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-num" id="total-categories">0</span>
+          <span class="stat-desc">Kategori</span>
+        </div>
+      </div>
+
+      <!-- History List -->
+      <div class="section-title">Scan Terakhir</div>
+      <div id="history-list" class="history-list">
+        <div class="empty-state">
+          <div class="empty-icon">📭</div>
+          <p>Belum ada riwayat scan.<br/>Yuk scan sampah pertamamu!</p>
+          <button class="btn-empty" onclick="navigateTo('scan')">Scan Sekarang</button>
+        </div>
+      </div>
+
+      <div style="height:80px;"></div>
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-btn" onclick="navigateTo('home')">
+        <span class="nav-icon">🏠</span><span class="nav-label">Home</span>
+      </button>
+      <button class="nav-btn nav-scan-btn" onclick="navigateTo('scan')">
+        <span class="nav-icon">📸</span><span class="nav-label">Scan</span>
+      </button>
+      <button class="nav-btn active" onclick="navigateTo('riwayat')">
+        <span class="nav-icon">📋</span><span class="nav-label">Riwayat</span>
+      </button>
+      <button class="nav-btn" onclick="navigateTo('achievement')">
+        <span class="nav-icon">🏆</span><span class="nav-label">Hadiah</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ===================== ACHIEVEMENT PAGE ===================== -->
+  <div id="page-achievement" class="page">
+    <div class="mobile-wrapper">
+      <div class="page-header">
+        <button class="back-btn" onclick="navigateTo('home')">←</button>
+        <h2 class="page-title">Achievement 🏆</h2>
+        <div style="width:40px;"></div>
+      </div>
+
+      <!-- Level Progress -->
+      <div class="level-card">
+        <div class="level-top">
+          <div class="level-badge-big">🌟</div>
+          <div class="level-info">
+            <p class="level-name">Eco Warrior</p>
+            <p class="level-sub" id="achieve-points-text">0 / 500 Points</p>
+          </div>
+        </div>
+        <div class="level-progress-bar">
+          <div class="level-progress-fill" id="level-progress-fill" style="width:0%"></div>
+        </div>
+        <p class="level-hint">Kumpulkan lebih banyak poin untuk naik level! 🚀</p>
+      </div>
+
+      <!-- Badges Grid -->
+      <div class="section-title">Badge Kamu 🎖️</div>
+      <div id="badges-grid" class="badges-grid">
+        <!-- Populated by JS -->
+      </div>
+
+      <div style="height:80px;"></div>
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-btn" onclick="navigateTo('home')">
+        <span class="nav-icon">🏠</span><span class="nav-label">Home</span>
+      </button>
+      <button class="nav-btn nav-scan-btn" onclick="navigateTo('scan')">
+        <span class="nav-icon">📸</span><span class="nav-label">Scan</span>
+      </button>
+      <button class="nav-btn" onclick="navigateTo('riwayat')">
+        <span class="nav-icon">📋</span><span class="nav-label">Riwayat</span>
+      </button>
+      <button class="nav-btn active" onclick="navigateTo('achievement')">
+        <span class="nav-icon">🏆</span><span class="nav-label">Hadiah</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ===================== EDUKASI PAGE ===================== -->
+  <div id="page-edukasi" class="page">
+    <div class="mobile-wrapper">
+      <div class="page-header">
+        <button class="back-btn" onclick="navigateTo('home')">←</button>
+        <h2 class="page-title">Edukasi Lingkungan 📚</h2>
+        <div style="width:40px;"></div>
+      </div>
+
+      <!-- Hero Banner -->
+      <div class="edu-hero">
+        <div class="edu-hero-text">
+          <h3>Bersama Kita Bisa<br/>Jaga Bumi! 🌏</h3>
+          <p>Pelajari cara memilah dan mendaur ulang sampah dengan benar.</p>
+        </div>
+        <div class="edu-hero-icon">🌱</div>
+      </div>
+
+      <!-- Tips Section -->
+      <div class="section-title">Tips Daur Ulang ♻️</div>
+      <div id="edu-tips-list" class="edu-tips-list">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Eco Facts Section -->
+      <div class="section-title">Fakta Lingkungan 🌍</div>
+      <div id="eco-facts-list" class="eco-facts-list">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Category Guide -->
+      <div class="section-title">Panduan Kategori Sampah ♻️</div>
+      <div id="category-guide" class="category-guide">
+        <!-- Populated by JS -->
+      </div>
+
+      <div style="height:80px;"></div>
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-btn" onclick="navigateTo('home')">
+        <span class="nav-icon">🏠</span><span class="nav-label">Home</span>
+      </button>
+      <button class="nav-btn nav-scan-btn" onclick="navigateTo('scan')">
+        <span class="nav-icon">📸</span><span class="nav-label">Scan</span>
+      </button>
+      <button class="nav-btn" onclick="navigateTo('riwayat')">
+        <span class="nav-icon">📋</span><span class="nav-label">Riwayat</span>
+      </button>
+      <button class="nav-btn" onclick="navigateTo('achievement')">
+        <span class="nav-icon">🏆</span><span class="nav-label">Hadiah</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ===================== PROFILE PAGE ===================== -->
+  <div id="page-profile" class="page">
+    <div class="mobile-wrapper">
+      <div class="page-header">
+        <button class="back-btn" onclick="navigateTo('home')">←</button>
+        <h2 class="page-title">Profil Saya 🧑</h2>
+        <div style="width:40px;"></div>
+      </div>
+
+      <div class="profile-header-card">
+        <div class="profile-avatar-large">🧑</div>
+        <h3 class="profile-name" id="profile-name-display">Pengguna</h3>
+        <p class="profile-email" id="profile-email-display">email@example.com</p>
+      </div>
+
+      <div class="section-title">Pengaturan Akun</div>
+      <div class="profile-menu">
+        <button class="profile-menu-item">
+          <span>🔔 Notifikasi</span>
+          <span class="arrow">→</span>
+        </button>
+        <button class="profile-menu-item" onclick="navigateTo('forgot')">
+          <span>🔒 Ubah Password</span>
+          <span class="arrow">→</span>
+        </button>
+        <button class="profile-menu-item">
+          <span>❓ Bantuan & FAQ</span>
+          <span class="arrow">→</span>
+        </button>
+      </div>
+
+      <button class="btn-scan btn-logout" onclick="handleLogout()">🚪 Keluar Akun</button>
+
+      <div style="height:80px;"></div>
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-btn" onclick="navigateTo('home')">
+        <span class="nav-icon">🏠</span><span class="nav-label">Home</span>
+      </button>
+      <button class="nav-btn nav-scan-btn" onclick="navigateTo('scan')">
+        <span class="nav-icon">📸</span><span class="nav-label">Scan</span>
+      </button>
+      <button class="nav-btn" onclick="navigateTo('riwayat')">
+        <span class="nav-icon">📋</span><span class="nav-label">Riwayat</span>
+      </button>
+      <button class="nav-btn" onclick="navigateTo('achievement')">
+        <span class="nav-icon">🏆</span><span class="nav-label">Hadiah</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Supabase -->
+  <script src="js/supabase-config.js"></script>
+  
+  <!-- TensorFlow.js & MobileNet (Untuk AI Scan Sampah) -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@latest"></script>
+  
+  <!-- App Logic -->
+  <script src="js/app.js"></script>
+</body>
+</html>

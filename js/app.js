@@ -199,20 +199,43 @@ function handleImageUpload(event) {
   if (file) {
     const reader = new FileReader();
     reader.onload = function(e) {
-      uploadedImageSrc = e.target.result;
-      const preview = document.getElementById('image-preview');
-      preview.src = uploadedImageSrc;
-      preview.classList.remove('hidden');
-      document.getElementById('upload-placeholder').classList.add('hidden');
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 800;
+        const MAX_HEIGHT = 800;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        uploadedImageSrc = canvas.toDataURL('image/jpeg', 0.7); // Kompres 70%
+        
+        const preview = document.getElementById('image-preview');
+        preview.src = uploadedImageSrc;
+        preview.classList.remove('hidden');
+        document.getElementById('upload-placeholder').classList.add('hidden');
+        
+        selectedCategory = null;
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+      }
+      img.src = e.target.result;
     }
     reader.readAsDataURL(file);
-    
-    // Auto guess category (mock simple logic)
-    setTimeout(() => {
-      const cats = ['Plastik', 'Kardus', 'Organik', 'Kaleng', 'Kertas'];
-      const randomCat = cats[Math.floor(Math.random() * cats.length)];
-      selectCategoryByString(randomCat);
-    }, 1000);
   }
 }
 
@@ -251,28 +274,29 @@ async function startScan() {
 
   let finalCategory = selectedCategory;
 
-  // Jika tidak ada kategori yang dipilih, tapi ada foto, gunakan AI!
+  // Jika tidak ada kategori yang dipilih, tapi ada foto, gunakan TensorFlow AI!
   if (!selectedCategory && uploadedImageSrc) {
     if (aiModel) {
-      loadText.textContent = "AI Sedang Memeriksa...";
+      loadText.textContent = "AI Sedang Menganalisis...";
       try {
         const imgEl = document.getElementById('image-preview');
         const predictions = await aiModel.classify(imgEl);
-        console.log("Hasil AI:", predictions);
+        console.log("Hasil AI TF:", predictions);
         
-        // Menerjemahkan hasil objek AI ke kategori kita
         const labels = predictions.map(p => p.className.toLowerCase()).join(' ');
-        if (labels.includes('bottle') || labels.includes('plastic')) finalCategory = 'Plastik';
-        else if (labels.includes('box') || labels.includes('carton') || labels.includes('cardboard')) finalCategory = 'Kardus';
-        else if (labels.includes('can') || labels.includes('tin') || labels.includes('metal')) finalCategory = 'Kaleng';
-        else if (labels.includes('paper') || labels.includes('book') || labels.includes('newspaper')) finalCategory = 'Kertas';
-        else finalCategory = 'Organik'; // Fallback
+        if (labels.includes('bottle') || labels.includes('plastic') || labels.includes('water bottle')) finalCategory = 'Plastik';
+        else if (labels.includes('box') || labels.includes('carton') || labels.includes('cardboard') || labels.includes('crate')) finalCategory = 'Kardus';
+        else if (labels.includes('can') || labels.includes('tin') || labels.includes('metal') || labels.includes('container')) finalCategory = 'Kaleng';
+        else if (labels.includes('paper') || labels.includes('book') || labels.includes('newspaper') || labels.includes('envelope')) finalCategory = 'Kertas';
+        else finalCategory = 'Organik';
+        
       } catch(err) {
         console.error("AI Error:", err);
-        finalCategory = 'Plastik'; 
+        finalCategory = 'Plastik';
       }
     } else {
-      finalCategory = 'Plastik'; // Fallback jika AI belum dimuat
+      // AI belum dimuat, pilih berdasarkan nama file sebagai fallback
+      finalCategory = 'Plastik';
     }
   }
 
